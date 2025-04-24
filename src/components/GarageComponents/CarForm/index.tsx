@@ -1,38 +1,33 @@
-import React, { useState, useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '../../../store/hooks'
-import {
-  createCar,
-  updateCar,
-  setEditingCar,
-} from '../../../store/carsSlice'
+import React, { useState, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { createCar, updateCar, setEditingCar } from "../../../store/carsSlice";
 
 export default function CarForm() {
-  const dispatch = useAppDispatch()
-  const editingCar = useAppSelector(state => state.cars.editingCar)
+  const dispatch = useAppDispatch();
+  const editingCar = useAppSelector((state) => state.cars.editingCar);
 
-  const [name, setName] = useState('')
-  const [color, setColor] = useState('#000000')
+  const [name, setName] = useState("");
+  const [color, setColor] = useState("#000000");
 
   useEffect(() => {
     if (editingCar !== null) {
-      setName(editingCar.name)
-      setColor(editingCar.color)
+      setName(editingCar.name);
+      setColor(editingCar.color);
     }
-  }, [editingCar])
+  }, [editingCar]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (editingCar !== null) {
-
-      dispatch(updateCar({ id: editingCar.id, updates: { name, color } }))
-      dispatch(setEditingCar(null))
+      dispatch(updateCar({ id: editingCar.id, updates: { name, color } }));
+      dispatch(setEditingCar(null));
     } else {
-      dispatch(createCar({ name, color }))
+      dispatch(createCar({ name, color }));
     }
-    setName('')
-    setColor('#000000')
-  }
+    setName("");
+    setColor("#000000");
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-x-2 mb-4">
@@ -40,7 +35,7 @@ export default function CarForm() {
         type="text"
         placeholder="Car name"
         value={name}
-        onChange={e => setName(e.target.value)}
+        onChange={(e) => setName(e.target.value)}
         required
         maxLength={20}
         className="border p-1"
@@ -48,12 +43,25 @@ export default function CarForm() {
       <input
         type="color"
         value={color}
-        onChange={e => setColor(e.target.value)}
+        onChange={(e) => setColor(e.target.value)}
         className="border p-1"
       />
       <button type="submit" className="btn">
-        {editingCar !== null ? 'Update' : 'Create'}
+        {editingCar !== null ? "Update" : "Create"}
       </button>
+      {editingCar !== null && (
+        <button
+          type="button"
+          className="btn bg-gray-500 text-white"
+          onClick={() => {
+            dispatch(setEditingCar(null));
+            setName("");
+            setColor("#000000");
+          }}
+        >
+          Cancel
+        </button>
+      )}
     </form>
-  )
+  );
 }
