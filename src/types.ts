@@ -12,3 +12,9 @@ export interface Car {
     wins: number;
     time: number;
   };
+
+  export type CarType = {
+    id: number;
+    name: string;
+    color: string;
+  };
