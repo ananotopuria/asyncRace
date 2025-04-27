@@ -1,58 +1,79 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchWinners, setWinnersPage, setSort } from "../../store/winnersSlice";
+import Pagination from "../commonComponents/Pagination";
 
-import Pagination from "../commonCompopnents/Pagination";
-
-export default function WinnersComponents() {
+export default function WinnersPage() {
   const dispatch = useAppDispatch();
-  const { winners, totalCount, page, sortField, sortOrder, status } = useAppSelector((s) => s.winners);
+  const { winners, totalCount, page, sortField, sortOrder, status } = useAppSelector(s => s.winners);
 
   useEffect(() => {
     dispatch(fetchWinners({ page, limit: 10, sortField, sortOrder }));
   }, [dispatch, page, sortField, sortOrder]);
 
   const handleSort = (field: 'wins' | 'time') => {
-    dispatch(setSort({ field, order: sortField === field && sortOrder === 'asc' ? 'desc' : 'asc' }));
+    const order = sortField === field && sortOrder === 'asc' ? 'desc' : 'asc';
+    dispatch(setSort({ field, order }));
   };
 
   return (
     <main className="p-4">
-      <h1 className="text-2xl mb-4">Winners</h1>
+      <h1 className="text-4xl mb-4 text-center font-racing">Winners</h1>
+
       {status === 'loading' ? (
         <p>Loading winners…</p>
       ) : winners.length === 0 ? (
         <p>No winners yet</p>
       ) : (
         <>
-          <table className="w-full text-left border">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Car</th>
-                <th>Name</th>
-                <th className="cursor-pointer" onClick={() => handleSort('wins')}>
-                  Wins {sortField === 'wins' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-                </th>
-                <th className="cursor-pointer" onClick={() => handleSort('time')}>
-                  Best Time (s) {sortField === 'time' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {winners.map((winner, index) => (
-                <tr key={winner.id}>
-                  <td>{(page - 1) * 10 + index + 1}</td>
-                  <td>
-                    <div className="w-10 h-6 bg-gray-300" style={{ backgroundColor: winner.color }} />
-                  </td>
-                  <td>{winner.name}</td>
-                  <td>{winner.wins}</td>
-                  <td>{winner.time.toFixed(2)}</td>
+          <div className="overflow-x-auto mb-4">
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="px-2 py-1 border">#</th>
+                  <th className="px-2 py-1 border">Car</th>
+                  <th className="px-2 py-1 border">Name</th>
+                  <th
+                    className="px-2 py-1 border cursor-pointer"
+                    onClick={() => handleSort('wins')}
+                  >
+                    Wins {sortField === 'wins' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                  </th>
+                  <th
+                    className="px-2 py-1 border cursor-pointer"
+                    onClick={() => handleSort('time')}
+                  >
+                    Best Time (s){' '}
+                    {sortField === 'time' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {winners.map((winner, idx) => (
+                  <tr
+                    key={winner.id}
+                    className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                  >
+                    <td className="px-2 py-1 border">
+                      {(page - 1) * 10 + idx + 1}
+                    </td>
+                    <td className="px-2 py-1 border">
+                      <div
+                        className="w-6 h-4 rounded"
+                        style={{ backgroundColor: winner.color }}
+                      />
+                    </td>
+                    <td className="px-2 py-1 border">{winner.name}</td>
+                    <td className="px-2 py-1 border">{winner.wins}</td>
+                    <td className="px-2 py-1 border">
+                      {winner.time.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           <Pagination
             currentPage={page}
             totalItems={totalCount}
@@ -62,5 +83,5 @@ export default function WinnersComponents() {
         </>
       )}
     </main>
-  );
+);
 }

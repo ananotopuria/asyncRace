@@ -1,67 +1,118 @@
-import React, { useState, useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { createCar, updateCar, setEditingCar } from "../../../store/carsSlice";
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { createCar, updateCar, setEditingCar } from '../../../store/carsSlice';
 
 export default function CarForm() {
   const dispatch = useAppDispatch();
   const editingCar = useAppSelector((state) => state.cars.editingCar);
 
-  const [name, setName] = useState("");
-  const [color, setColor] = useState("#000000");
+  const [name, setName] = useState<string>('');
+  const [color, setColor] = useState<string>('#000000');
 
   useEffect(() => {
-    if (editingCar !== null) {
+    if (editingCar) {
       setName(editingCar.name);
       setColor(editingCar.color);
     }
   }, [editingCar]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (editingCar !== null) {
+    if (editingCar) {
       dispatch(updateCar({ id: editingCar.id, updates: { name, color } }));
       dispatch(setEditingCar(null));
     } else {
       dispatch(createCar({ name, color }));
     }
-    setName("");
-    setColor("#000000");
+    setName('');
+    setColor('#000000');
+  };
+
+  const handleCancel = () => {
+    dispatch(setEditingCar(null));
+    setName('');
+    setColor('#000000');
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-x-2 mb-4">
-      <input
-        type="text"
-        placeholder="Car name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        maxLength={20}
-        className="border p-1"
-      />
-      <input
-        type="color"
-        value={color}
-        onChange={(e) => setColor(e.target.value)}
-        className="border p-1"
-      />
-      <button type="submit" className="btn">
-        {editingCar !== null ? "Update" : "Create"}
-      </button>
-      {editingCar !== null && (
-        <button
-          type="button"
-          className="btn bg-gray-500 text-white"
-          onClick={() => {
-            dispatch(setEditingCar(null));
-            setName("");
-            setColor("#000000");
-          }}
+    <motion.form
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-yellow p-6 shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 items-end"
+    >
+      <motion.div
+        className="flex flex-col"
+        whileHover={{ scale: 1.02 }}
+        whileFocus={{ scale: 1.02 }}
+        transition={{ type: 'spring', stiffness: 300 }}
+      >
+        <label htmlFor="car-name" className="mb-1 text-sm font-medium text-gray-700 font-racing">
+          Car Name
+        </label>
+        <motion.input
+          id="car-name"
+          type="text"
+          placeholder="Enter car name 🏎️💨🍃"
+          value={name}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+          required
+          maxLength={20}
+          whileFocus={{ scale: 1.03 }}
+          transition={{ type: 'spring', stiffness: 300 }}
+          className="border border-gray-300  text-lighterGrey font-racing rounded-3xl p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+      </motion.div>
+
+    
+      <motion.div
+        className="flex flex-col"
+        whileHover={{ scale: 1.02 }}
+        transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
+      >
+        <label htmlFor="car-color" className="mb-1 text-sm font-medium text-gray-700 font-racing">
+          Color
+        </label>
+        <motion.input
+          id="car-color"
+          type="color"
+          value={color}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
+          whileTap={{ scale: 1.1 }}
+          transition={{ type: 'spring', stiffness: 400 }}
+          className="w-[20rem] h-[4rem] p-0 border focus:outline-none"
+        />
+      </motion.div>
+      <motion.div
+        className="flex gap-4 md:col-span-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <motion.button
+          type="submit"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`px-6 py-2 font-racing rounded-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all
+            ${editingCar ? 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500' : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'}`}
         >
-          Cancel
-        </button>
-      )}
-    </form>
+          {editingCar ? 'Update' : 'Create'}
+        </motion.button>
+
+        {editingCar && (
+          <motion.button
+            type="button"
+            onClick={handleCancel}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-2 bg-red-500 hover:bg-red-600 font-racing text-red rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all"
+          >
+            Cancel
+          </motion.button>
+        )}
+      </motion.div>
+    </motion.form>
   );
 }

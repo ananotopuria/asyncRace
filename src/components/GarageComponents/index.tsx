@@ -3,10 +3,11 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchCars, setPage, createCar } from "../../store/carsSlice";
 import CarForm from "./CarForm";
 import CarCard from "./CarCard";
-import Pagination from "../commonCompopnents/Pagination";
+import Pagination from "../commonComponents/Pagination";
 import { randomCar } from "../../utils/randomCar";
-import { startEngine, stopEngine, drive } from "../../api/engine";
+import { startEngine, stopEngine } from "../../api/engine";
 import { Car } from "../../types";
+import RaceControls from "./RaceControls";
 
 export default function GaragePage() {
   const dispatch = useAppDispatch();
@@ -14,54 +15,35 @@ export default function GaragePage() {
   const [isRacing, setIsRacing] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchCars({ page, limit: 7 })).then((action) => {
-      const payload = action.payload as { data: Car[]; totalCount: number };
-      if (payload && payload.totalCount < 7) {
-        Array.from({ length: 100 }).forEach(() => {
-          dispatch(createCar(randomCar()));
-        });
-      }
-    });
+    dispatch(fetchCars({ page, limit: 7 }));
   }, [dispatch, page]);
 
   const handleGenerate = () => {
-    Array.from({ length: 100 }).forEach(() => {
-      dispatch(createCar(randomCar()));
-    });
+    Array.from({ length: 100 }).forEach(() => dispatch(createCar(randomCar())));
   };
 
   const handleStartRace = async () => {
     setIsRacing(true);
+    const results: { car: Car; time: number }[] = [];
 
-    const promises = cars.map(async (car) => {
+    for (const car of cars) {
       try {
         const { velocity, distance } = await startEngine(car.id);
         const time = distance / velocity;
 
         animateCar(car.id, time);
-
-        const driveResult = await drive(car.id);
-        if (driveResult === "success") {
-          return { car, time };
-        } else {
-          return null;
-        }
-      } catch {
-        return null;
+        results.push({ car, time });
+      } catch (error) {
+        console.error(`Failed starting car ${car.id}:`, error);
+        resetCarPosition(car.id);
       }
-    });
+    }
 
-    const results = await Promise.all(promises);
-
-    const validResults = results.filter(Boolean) as { car: typeof cars[0]; time: number }[];
-
-    if (validResults.length > 0) {
-      const winner = validResults.reduce((prev, current) =>
-        prev.time < current.time ? prev : current
-      );
+    if (results.length > 0) {
+      const winner = results.reduce((a, b) => (a.time < b.time ? a : b));
       setTimeout(() => {
-        alert(`🏆 Winner: ${winner.car.name} with time ${winner.time.toFixed(2)}s!`);
-      }, 100); 
+        alert(`🏆 Winner: ${winner.car.name} in ${winner.time.toFixed(2)}s!`);
+      }, 100);
     }
 
     setIsRacing(false);
@@ -69,70 +51,67 @@ export default function GaragePage() {
 
   const handleResetRace = async () => {
     setIsRacing(false);
-
     await Promise.all(
-      cars.map(async (car) => {
-        try {
-          await stopEngine(car.id);
-          resetCarPosition(car.id);
-        } catch (e) {
-          console.error(e);
-        }
-      })
+      cars.map((car) =>
+        stopEngine(car.id)
+          .catch((e) => console.error(`Stop error for car ${car.id}:`, e))
+          .then(() => resetCarPosition(car.id))
+      )
     );
   };
 
   return (
-    <main className="p-4">
-      <h1 className="text-2xl mb-4">Garage</h1>
-
-      <button className="btn" onClick={handleGenerate} disabled={isRacing}>
-        Generate 100
-      </button>
-
+    <main className="p-4  ">
+      <h1 className="text-6xl mb-4 text-center font-racing p-[2rem] text-red">
+        Garage
+      </h1>
+      <RaceControls
+        isRacing={isRacing}
+        onGenerate={handleGenerate}
+        onStartRace={handleStartRace}
+        onResetRace={handleResetRace}
+      />
       <CarForm />
-
-      <div className="my-4 space-x-2">
-        <button className="btn" onClick={handleStartRace} disabled={isRacing}>
-          Start Race
-        </button>
-        <button className="btn" onClick={handleResetRace}>
-          Reset Race
-        </button>
-      </div>
 
       {status === "loading" ? (
         <p>Loading cars…</p>
       ) : cars.length === 0 ? (
         <p>No Cars</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="flex flex-col gap-[2rem]">
           {cars.map((car) => (
             <CarCard key={car.id} car={car} />
           ))}
         </div>
       )}
-
-      <Pagination
-        currentPage={page}
-        totalItems={totalCount}
-        pageSize={7}
-        onPageChange={(p) => dispatch(setPage(p))}
-      />
+      <div className="flex justify-center">
+        <Pagination
+          currentPage={page}
+          totalItems={totalCount}
+          pageSize={7}
+          onPageChange={(p) => dispatch(setPage(p))}
+        />
+      </div>
     </main>
   );
 }
 
 function animateCar(id: number, time: number) {
-  const car = document.getElementById(`car-${id}`);
-  if (!car) return;
-  car.style.transition = `transform ${time}s linear`;
-  car.style.transform = `translateX(90%)`;
+  const el = document.getElementById(`car-${id}`);
+  if (!el) return;
+
+  el.style.transition = "";
+  el.style.transform = "translateX(0)";
+  void el.offsetWidth;
+
+  const trackWidth = el.parentElement?.getBoundingClientRect().width ?? 0;
+  el.style.transition = `transform ${time}s linear`;
+  el.style.transform = `translateX(${trackWidth}px)`;
 }
 
 function resetCarPosition(id: number) {
-  const car = document.getElementById(`car-${id}`);
-  if (!car) return;
-  car.style.transition = 'transform 0.5s';
-  car.style.transform = 'translateX(0)';
+  const el = document.getElementById(`car-${id}`);
+  if (!el) return;
+  el.style.transition = "";
+  el.style.transform = "translateX(0)";
 }
