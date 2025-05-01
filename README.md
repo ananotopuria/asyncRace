@@ -73,3 +73,7 @@ Users can:
 - [ ] ESLint configured with Airbnb style guide (0/5)
 
 *Total: 380 / 400*
+
+<img width="1447" alt="Screenshot 2025-05-02 at 00 18 13" src="https://github.com/user-attachments/assets/961425b0-eeb4-41d3-ae70-aa5afa993aba" />
+<img width="1443" alt="Screenshot 2025-05-02 at 00 18 44" src="https://github.com/user-attachments/assets/088cd133-182d-4509-a8be-2d711dff9b9b" />
+
