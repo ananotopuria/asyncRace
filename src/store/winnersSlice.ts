@@ -1,81 +1,58 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { Winner } from '../types'
-import * as api from '../api/winners'
-
-type SortField = 'wins' | 'time'
-type SortOrder = 'asc' | 'desc'
-
-interface FetchWinnersArgs {
-  page: number
-  limit: number
-  sortField: SortField
-  sortOrder: SortOrder
-}
-
-export const fetchWinners = createAsyncThunk<
-  { winners: Winner[]; totalCount: number }, 
-  FetchWinnersArgs                       
->(
-  'winners/fetch',
-  async ({ page, limit, sortField, sortOrder }: FetchWinnersArgs) => {
-    const { data, totalCount } = await api.getWinners(
-      page,
-      limit,
-      sortField,
-      sortOrder
-    )
-    return { winners: data, totalCount }
-  }
-)
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { WinnerRecord, getWinners } from '../api/winners';
 
 interface WinnersState {
-  winners: Winner[]
-  status: 'idle' | 'loading' | 'failed'
-  page: number
-  totalCount: number
-  sortField: SortField
-  sortOrder: SortOrder
+  winners: WinnerRecord[];
+  page: number;
+  totalCount: number;
+  status: 'idle' | 'loading' | 'failed';
+  sortField: 'wins' | 'time';
+  sortOrder: 'asc' | 'desc';
 }
 
 const initialState: WinnersState = {
   winners: [],
-  status: 'idle',
   page: 1,
   totalCount: 0,
+  status: 'idle',
   sortField: 'wins',
   sortOrder: 'desc',
-}
+};
+
+export const fetchWinners = createAsyncThunk(
+  'winners/fetchWinners',
+  async ({ page, sortField, sortOrder }: { page: number; sortField: 'wins' | 'time'; sortOrder: 'asc' | 'desc' }) => {
+    return await getWinners(page, 10, sortField, sortOrder);
+  }
+);
 
 const winnersSlice = createSlice({
   name: 'winners',
   initialState,
   reducers: {
     setPage(state, action: PayloadAction<number>) {
-      state.page = action.payload
+      state.page = action.payload;
     },
-    setSort(
-      state,
-      action: PayloadAction<{ field: SortField; order: SortOrder }>
-    ) {
-      state.sortField = action.payload.field
-      state.sortOrder = action.payload.order
+    setSort(state, action: PayloadAction<{ field: 'wins' | 'time'; order: 'asc' | 'desc' }>) {
+      state.sortField = action.payload.field;
+      state.sortOrder = action.payload.order;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchWinners.pending, (state) => {
-        state.status = 'loading'
+        state.status = 'loading';
       })
       .addCase(fetchWinners.fulfilled, (state, action) => {
-        state.status = 'idle'
-        state.winners = action.payload.winners
-        state.totalCount = action.payload.totalCount
+        state.status = 'idle';
+        state.winners = action.payload.data;
+        state.totalCount = action.payload.totalCount;
       })
       .addCase(fetchWinners.rejected, (state) => {
-        state.status = 'failed'
-      })
+        state.status = 'failed';
+      });
   },
-})
+});
 
-export const { setPage: setWinnersPage, setSort } = winnersSlice.actions
-export default winnersSlice.reducer
+export const { setPage, setSort } = winnersSlice.actions;
+export default winnersSlice.reducer;
