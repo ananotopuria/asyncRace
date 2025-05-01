@@ -11,6 +11,7 @@ import RaceControls from './RaceControls';
 import WinnerModal from './WinnerModal';
 import { animateCar, resetCarPosition, SPEED_FACTOR } from '../../utils/animationUtils';
 import { getWinner, createWinner, updateWinner} from '../../api/winners';
+import { motion } from 'framer-motion';
 
 export default function GaragePage() {
   const dispatch = useAppDispatch();
@@ -85,9 +86,16 @@ export default function GaragePage() {
   return (
     <>
       <main className="p-4">
-        <h1 className="text-6xl mb-4 text-center font-racing p-[2rem] text-red">
+      <div className="px-6 py-4 border-b">
+        <motion.h1
+          className="text-6xl mb-4 text-center font-racing p-[2rem] text-red"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           Garage
-        </h1>
+        </motion.h1>
+      </div>
         <RaceControls
           isRacing={isRacing}
           onGenerate={handleGenerate}
