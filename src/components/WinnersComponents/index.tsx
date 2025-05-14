@@ -31,9 +31,12 @@ export default function WinnersPage() {
           Winners
         </motion.h1>
       </div>
-      <div className=" bg-white shadow-lg overflow-hidden">
+
+      <div className="bg-white shadow-lg overflow-hidden">
         {status === "loading" ? (
           <p className="p-4 text-center text-gray-600">Loading winners…</p>
+        ) : winners.length === 0 ? (
+          <p className="p-6 text-center text-gray-500">No winners found yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -110,14 +113,17 @@ export default function WinnersPage() {
             </table>
           </div>
         )}
-        <div className="px-6 py-4 border-t flex justify-center">
-          <Pagination
-            currentPage={page}
-            totalItems={totalCount}
-            pageSize={10}
-            onPageChange={(p) => dispatch(setPage(p))}
-          />
-        </div>
+
+        {totalCount > 0 && (
+          <div className="px-6 py-4 border-t flex justify-center">
+            <Pagination
+              currentPage={page}
+              totalItems={totalCount}
+              pageSize={10}
+              onPageChange={(p) => dispatch(setPage(p))}
+            />
+          </div>
+        )}
       </div>
     </main>
   );
