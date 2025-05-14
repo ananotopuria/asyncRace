@@ -46,48 +46,67 @@ export default function GaragePage() {
     setIsRacing(true);
     setWinner(null);
 
-    const results = await Promise.all(
-      cars.map((car) =>
-        startEngine(car.id)
-          .then(({ velocity, distance }) => ({
-            car,
-            time: distance / velocity,
-          }))
-          .catch(() => {
-            resetCarPosition(car.id);
-            return { car, time: Infinity };
-          })
-      )
-    );
-
-    results.forEach(({ car, time }) => animateCar(car.id, time));
-
-    const win = results.reduce((a, b) => (a.time < b.time ? a : b));
-
     try {
-      const existing = await getWinner(win.car.id);
-      if (existing) {
-        await updateWinner(existing.id, {
-          wins: existing.wins + 1,
-          time: Math.min(existing.time, win.time),
-        });
-      } else {
-        await createWinner({
-          id: win.car.id,
-          name: win.car.name,
-          color: win.car.color,
-          wins: 1,
-          time: win.time,
-        });
-      }
-    } catch (e) {
-      console.error("Could not save winner:", e);
-    }
+      const res = await fetch("/garage");
+      if (!res.ok) throw new Error("Failed to fetch all cars for the race");
+      const allCars: Car[] = await res.json();
 
-    setTimeout(() => {
-      setWinner({ ...win.car, time: win.time });
+      const results = await Promise.all(
+        allCars.map((car) =>
+          startEngine(car.id)
+            .then(({ velocity, distance }) => {
+              const time = distance / velocity;
+
+              if (cars.find((c) => c.id === car.id)) {
+                animateCar(car.id, time);
+              }
+
+              return { car, time };
+            })
+            .catch(() => {
+              resetCarPosition(car.id);
+              return { car, time: Infinity };
+            })
+        )
+      );
+
+      const win = results.reduce((a, b) => (a.time < b.time ? a : b));
+
+      try {
+        const existing = await getWinner(win.car.id);
+        if (existing) {
+          await updateWinner(existing.id, {
+            wins: existing.wins + 1,
+            time: Math.min(existing.time, win.time),
+          });
+        } else {
+          await createWinner({
+            id: win.car.id,
+            name: win.car.name,
+            color: win.car.color,
+            wins: 1,
+            time: win.time,
+          });
+        }
+      } catch (e) {
+        console.error("Could not save winner:", e);
+      }
+
+      const isWinnerVisible = cars.some((c) => c.id === win.car.id);
+
+      if (isWinnerVisible) {
+        setTimeout(() => {
+          setWinner({ ...win.car, time: win.time });
+          setIsRacing(false);
+        }, (win.time / SPEED_FACTOR) * 1000 + 100);
+      } else {
+        setWinner({ ...win.car, time: win.time });
+        setIsRacing(false);
+      }
+    } catch (err) {
+      console.error("Race failed:", err);
       setIsRacing(false);
-    }, (win.time / SPEED_FACTOR) * 1000 + 100);
+    }
   };
 
   const handleResetRace = async () => {
