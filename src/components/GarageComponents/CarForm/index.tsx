@@ -1,38 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { createCar, updateCar, setEditingCar } from '../../../store/carsSlice';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { createCar, updateCar, setEditingCar } from "../../../store/carsSlice";
 
 export default function CarForm() {
   const dispatch = useAppDispatch();
   const editingCar = useAppSelector((state) => state.cars.editingCar);
 
-  const [name, setName] = useState<string>('');
-  const [color, setColor] = useState<string>('#000000');
+  const [name, setName] = useState<string>("");
+  const [color, setColor] = useState<string>("#000000");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
     if (editingCar) {
       setName(editingCar.name);
       setColor(editingCar.color);
+      setErrorMessage("");
     }
   }, [editingCar]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!name.trim()) {
+      setErrorMessage("Car name is required.");
+      return;
+    }
+
     if (editingCar) {
       dispatch(updateCar({ id: editingCar.id, updates: { name, color } }));
       dispatch(setEditingCar(null));
     } else {
       dispatch(createCar({ name, color }));
     }
-    setName('');
-    setColor('#000000');
+
+    setName("");
+    setColor("#000000");
+    setErrorMessage("");
   };
 
   const handleCancel = () => {
     dispatch(setEditingCar(null));
-    setName('');
-    setColor('#000000');
+    setName("");
+    setColor("#000000");
+    setErrorMessage("");
   };
 
   return (
@@ -47,9 +58,12 @@ export default function CarForm() {
         className="flex flex-col"
         whileHover={{ scale: 1.02 }}
         whileFocus={{ scale: 1.02 }}
-        transition={{ type: 'spring', stiffness: 300 }}
+        transition={{ type: "spring", stiffness: 300 }}
       >
-        <label htmlFor="car-name" className="mb-1 text-sm font-medium text-gray-700 font-racing">
+        <label
+          htmlFor="car-name"
+          className="mb-1 text-sm font-medium text-gray-700 font-racing"
+        >
           Car Name
         </label>
         <motion.input
@@ -57,34 +71,44 @@ export default function CarForm() {
           type="text"
           placeholder="Enter car name 🏎️💨🍃"
           value={name}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-          required
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setName(e.target.value);
+            if (errorMessage) setErrorMessage("");
+          }}
           maxLength={20}
           whileFocus={{ scale: 1.03 }}
-          transition={{ type: 'spring', stiffness: 300 }}
-          className="border border-gray-300  text-lighterGrey font-racing rounded-3xl p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          transition={{ type: "spring", stiffness: 300 }}
+          className="border border-gray-300 text-lighterGrey font-racing rounded-3xl p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
+        {errorMessage && (
+          <p className="text-red-500 text-sm mt-1">{errorMessage}</p>
+        )}
       </motion.div>
 
-    
       <motion.div
         className="flex flex-col"
         whileHover={{ scale: 1.02 }}
-        transition={{ type: 'spring', stiffness: 300, delay: 0.1 }}
+        transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
       >
-        <label htmlFor="car-color" className="mb-1 text-sm font-medium text-gray-700 font-racing">
+        <label
+          htmlFor="car-color"
+          className="mb-1 text-sm font-medium text-gray-700 font-racing"
+        >
           Color
         </label>
         <motion.input
           id="car-color"
           type="color"
           value={color}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setColor(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setColor(e.target.value)
+          }
           whileTap={{ scale: 1.1 }}
-          transition={{ type: 'spring', stiffness: 400 }}
+          transition={{ type: "spring", stiffness: 400 }}
           className="w-[20rem] h-[4rem] p-0 border focus:outline-none"
         />
       </motion.div>
+
       <motion.div
         className="flex gap-4 md:col-span-1"
         initial={{ opacity: 0 }}
@@ -96,9 +120,13 @@ export default function CarForm() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           className={`px-6 py-2 font-racing rounded-lg font-semibold text-black focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all
-            ${editingCar ? 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500' : 'bg-green-500 hover:bg-green-600 focus:ring-green-500'}`}
+            ${
+              editingCar
+                ? "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-500"
+                : "bg-green-500 hover:bg-green-600 focus:ring-green-500"
+            }`}
         >
-          {editingCar ? 'Update' : 'Create'}
+          {editingCar ? "Update" : "Create"}
         </motion.button>
 
         {editingCar && (

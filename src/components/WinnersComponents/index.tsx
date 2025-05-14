@@ -4,7 +4,6 @@ import { fetchWinners, setPage, setSort } from "../../store/winnersSlice";
 import Pagination from "../commonComponents/Pagination";
 import { WinnerRecord } from "../../api/winners";
 import { motion } from "framer-motion";
-// import carImg from "./../../assets/matthew-dockery-s99-JP8P3Hg-unsplash.jpg"
 
 export default function WinnersPage() {
   const dispatch = useAppDispatch();
@@ -120,10 +119,6 @@ export default function WinnersPage() {
           />
         </div>
       </div>
-      {/* <div className="flex justify-center">
-
-      <img src={carImg} className="w-auto h-[40rem]"/>
-      </div> */}
     </main>
   );
 }

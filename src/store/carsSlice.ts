@@ -18,7 +18,6 @@ const initialState: CarsState = {
   editingCar: null,
 };
 
-// Thunks
 export const fetchCars = createAsyncThunk<
   { cars: Car[]; totalCount: number },
   { page: number; limit: number }

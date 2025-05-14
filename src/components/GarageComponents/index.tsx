@@ -1,30 +1,46 @@
-import { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchCars, setPage, createCar } from '../../store/carsSlice';
-import CarForm from './CarForm';
-import CarCard from './CarCard';
-import Pagination from '../commonComponents/Pagination';
-import { randomCar } from '../../utils/randomCar';
-import { startEngine, stopEngine } from '../../api/engine';
-import { Car } from '../../types';
-import RaceControls from './RaceControls';
-import WinnerModal from './WinnerModal';
-import { animateCar, resetCarPosition, SPEED_FACTOR } from '../../utils/animationUtils';
-import { getWinner, createWinner, updateWinner} from '../../api/winners';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchCars, setPage, createCar } from "../../store/carsSlice";
+import CarForm from "./CarForm";
+import CarCard from "./CarCard";
+import Pagination from "../commonComponents/Pagination";
+import { randomCar } from "../../utils/randomCar";
+import { startEngine, stopEngine } from "../../api/engine";
+import { Car } from "../../types";
+import RaceControls from "./RaceControls";
+import WinnerModal from "./WinnerModal";
+import {
+  animateCar,
+  resetCarPosition,
+  SPEED_FACTOR,
+} from "../../utils/animationUtils";
+import { getWinner, createWinner, updateWinner } from "../../api/winners";
+import { motion } from "framer-motion";
 
 export default function GaragePage() {
   const dispatch = useAppDispatch();
   const { cars, page, totalCount, status } = useAppSelector((s) => s.cars);
+
   const [isRacing, setIsRacing] = useState(false);
   const [winner, setWinner] = useState<(Car & { time: number }) | null>(null);
+  const [createError, setCreateError] = useState("");
 
   useEffect(() => {
     dispatch(fetchCars({ page, limit: 7 }));
   }, [dispatch, page]);
 
-  const handleGenerate = () =>
-    Array.from({ length: 100 }).forEach(() => dispatch(createCar(randomCar())));
+  const handleGenerate = async () => {
+    for (let i = 0; i < 100; i++) {
+      try {
+        await dispatch(createCar(randomCar())).unwrap();
+      } catch (err) {
+        console.error("Car creation failed:", err);
+        setCreateError("Some cars could not be generated. Please try again.");
+      }
+    }
+    dispatch(setPage(1));
+    dispatch(fetchCars({ page: 1, limit: 7 }));
+  };
 
   const handleStartRace = async () => {
     setIsRacing(true);
@@ -33,7 +49,10 @@ export default function GaragePage() {
     const results = await Promise.all(
       cars.map((car) =>
         startEngine(car.id)
-          .then(({ velocity, distance }) => ({ car, time: distance / velocity }))
+          .then(({ velocity, distance }) => ({
+            car,
+            time: distance / velocity,
+          }))
           .catch(() => {
             resetCarPosition(car.id);
             return { car, time: Infinity };
@@ -62,7 +81,7 @@ export default function GaragePage() {
         });
       }
     } catch (e) {
-      console.error('Could not save winner:', e);
+      console.error("Could not save winner:", e);
     }
 
     setTimeout(() => {
@@ -86,24 +105,31 @@ export default function GaragePage() {
   return (
     <>
       <main className="p-4">
-      <div className="px-6 py-4 border-b">
-        <motion.h1
-          className="text-6xl mb-4 text-center font-racing p-[2rem] text-red"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          Garage
-        </motion.h1>
-      </div>
+        <div className="px-6 py-4 border-b">
+          <motion.h1
+            className="text-6xl mb-4 text-center font-racing p-[2rem] text-red"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            Garage
+          </motion.h1>
+        </div>
+
         <RaceControls
           isRacing={isRacing}
           onGenerate={handleGenerate}
           onStartRace={handleStartRace}
           onResetRace={handleResetRace}
         />
+
+        {createError && (
+          <p className="text-red-500 text-center mt-2">{createError}</p>
+        )}
+
         <CarForm />
-        {status === 'loading' ? (
+
+        {status === "loading" ? (
           <p>Loading cars…</p>
         ) : cars.length === 0 ? (
           <p>No Cars</p>
@@ -114,16 +140,24 @@ export default function GaragePage() {
             ))}
           </div>
         )}
-        <div className="flex justify-center">
-          <Pagination
-            currentPage={page}
-            totalItems={totalCount}
-            pageSize={7}
-            onPageChange={(p) => dispatch(setPage(p))}
-          />
-        </div>
+
+        {totalCount > 0 && (
+          <div className="flex justify-center">
+            <Pagination
+              currentPage={page}
+              totalItems={totalCount}
+              pageSize={7}
+              onPageChange={(p) => dispatch(setPage(p))}
+            />
+          </div>
+        )}
       </main>
-      <WinnerModal isOpen={!!winner} winner={winner} onClose={() => setWinner(null)} />
+
+      <WinnerModal
+        isOpen={!!winner}
+        winner={winner}
+        onClose={() => setWinner(null)}
+      />
     </>
   );
 }
