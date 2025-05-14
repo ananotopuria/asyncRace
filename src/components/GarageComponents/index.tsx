@@ -19,11 +19,12 @@ import { motion } from "framer-motion";
 
 export default function GaragePage() {
   const dispatch = useAppDispatch();
-  const { cars, page, totalCount, status } = useAppSelector((s) => s.cars);
+  const { cars, page, totalCount, status, error: fetchError } = useAppSelector((s) => s.cars);
 
   const [isRacing, setIsRacing] = useState(false);
   const [winner, setWinner] = useState<(Car & { time: number }) | null>(null);
   const [createError, setCreateError] = useState("");
+  const [raceError, setRaceError] = useState("");
 
   useEffect(() => {
     dispatch(fetchCars({ page, limit: 7 }));
@@ -45,6 +46,7 @@ export default function GaragePage() {
   const handleStartRace = async () => {
     setIsRacing(true);
     setWinner(null);
+    setRaceError("");
 
     try {
       const res = await fetch("/garage");
@@ -105,6 +107,7 @@ export default function GaragePage() {
       }
     } catch (err) {
       console.error("Race failed:", err);
+      setRaceError("⚠️ Unable to connect to the server. Please make sure the backend is running.");
       setIsRacing(false);
     }
   };
@@ -144,6 +147,18 @@ export default function GaragePage() {
 
         {createError && (
           <p className="text-red-500 text-center mt-2">{createError}</p>
+        )}
+
+        {fetchError && (
+          <p className="text-red-600 text-center mt-2 font-medium">
+            {fetchError}
+          </p>
+        )}
+
+        {raceError && (
+          <p className="text-red-600 text-center mt-2 font-medium">
+            {raceError}
+          </p>
         )}
 
         <CarForm />

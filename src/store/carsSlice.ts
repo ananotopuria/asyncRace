@@ -8,6 +8,7 @@ interface CarsState {
   page: number;
   totalCount: number;
   editingCar: Car | null;
+  error: string;
 }
 
 const initialState: CarsState = {
@@ -16,14 +17,20 @@ const initialState: CarsState = {
   page: 1,
   totalCount: 0,
   editingCar: null,
+  error: "",
 };
 
 export const fetchCars = createAsyncThunk<
   { cars: Car[]; totalCount: number },
-  { page: number; limit: number }
->("cars/fetch", async ({ page, limit }) => {
-  const { data, totalCount } = await api.getCars(page, limit);
-  return { cars: data, totalCount };
+  { page: number; limit: number },
+  { rejectValue: string }
+>("cars/fetch", async ({ page, limit }, thunkAPI) => {
+  try {
+    const { data, totalCount } = await api.getCars(page, limit);
+    return { cars: data, totalCount };
+  } catch {
+    return thunkAPI.rejectWithValue("🚨 Backend is not running or failed to fetch cars.");
+  }
 });
 
 export const createCar = createAsyncThunk<Car, Omit<Car, "id">>(
@@ -59,14 +66,16 @@ const carsSlice = createSlice({
     builder
       .addCase(fetchCars.pending, (state) => {
         state.status = "loading";
+        state.error = ""; 
       })
       .addCase(fetchCars.fulfilled, (state, { payload }) => {
         state.status = "idle";
         state.cars = payload.cars;
         state.totalCount = payload.totalCount;
       })
-      .addCase(fetchCars.rejected, (state) => {
+      .addCase(fetchCars.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload || "Failed to load cars.";
       })
 
       .addCase(createCar.fulfilled, (state, { payload }) => {
@@ -81,7 +90,6 @@ const carsSlice = createSlice({
         state.cars = state.cars.filter((c) => c.id !== payload);
         state.totalCount -= 1;
       });
-      
   },
 });
 
