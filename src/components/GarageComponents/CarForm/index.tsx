@@ -52,7 +52,7 @@ export default function CarForm() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-yellow p-6 shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 items-end"
+      className="bg-yellow p-6 shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 items-start"
     >
       <motion.div
         className="flex flex-col"
@@ -71,22 +71,26 @@ export default function CarForm() {
           type="text"
           placeholder="Enter car name 🏎️💨🍃"
           value={name}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setName(e.target.value);
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value.length > 20) {
+              setErrorMessage("Name cannot exceed 20 characters.");
+              return;
+            }
+            setName(value);
             if (errorMessage) setErrorMessage("");
           }}
-          maxLength={20}
           whileFocus={{ scale: 1.03 }}
           transition={{ type: "spring", stiffness: 300 }}
           className="border border-gray-300 text-lighterGrey font-racing rounded-3xl p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
-        {errorMessage && (
-          <p className="text-red-500 text-sm mt-1">{errorMessage}</p>
-        )}
+        <p className="text-sm mt-1 min-h-[1.25rem] text-red-500 font-medium font-bruno text-red">
+          {errorMessage || "\u00A0"}
+        </p>
       </motion.div>
 
       <motion.div
-        className="flex flex-col"
+        className="flex flex-col ml-4"
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
       >
