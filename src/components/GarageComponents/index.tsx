@@ -19,7 +19,13 @@ import { motion } from "framer-motion";
 
 export default function GaragePage() {
   const dispatch = useAppDispatch();
-  const { cars, page, totalCount, status, error: fetchError } = useAppSelector((s) => s.cars);
+  const {
+    cars,
+    page,
+    totalCount,
+    status,
+    error: fetchError,
+  } = useAppSelector((s) => s.cars);
 
   const [isRacing, setIsRacing] = useState(false);
   const [winner, setWinner] = useState<(Car & { time: number }) | null>(null);
@@ -43,26 +49,88 @@ export default function GaragePage() {
     dispatch(fetchCars({ page: 1, limit: 7 }));
   };
 
+  // const handleStartRace = async () => {
+  //   setIsRacing(true);
+  //   setWinner(null);
+  //   setRaceError("");
+
+  //   try {
+  //     const res = await fetch("/garage");
+  //     if (!res.ok) throw new Error("Failed to fetch all cars for the race");
+  //     const allCars: Car[] = await res.json();
+
+  //     const results = await Promise.all(
+  //       allCars.map((car) =>
+  //         startEngine(car.id)
+  //           .then(({ velocity, distance }) => {
+  //             const time = distance / velocity;
+
+  //             if (cars.find((c) => c.id === car.id)) {
+  //               animateCar(car.id, time);
+  //             }
+
+  //             return { car, time };
+  //           })
+  //           .catch(() => {
+  //             resetCarPosition(car.id);
+  //             return { car, time: Infinity };
+  //           })
+  //       )
+  //     );
+
+  //     const win = results.reduce((a, b) => (a.time < b.time ? a : b));
+
+  //     try {
+  //       const existing = await getWinner(win.car.id);
+  //       if (existing) {
+  //         await updateWinner(existing.id, {
+  //           wins: existing.wins + 1,
+  //           time: Math.min(existing.time, win.time),
+  //         });
+  //       } else {
+  //         await createWinner({
+  //           id: win.car.id,
+  //           name: win.car.name,
+  //           color: win.car.color,
+  //           wins: 1,
+  //           time: win.time,
+  //         });
+  //       }
+  //     } catch (e) {
+  //       console.error("Could not save winner:", e);
+  //     }
+
+  //     const isWinnerVisible = cars.some((c) => c.id === win.car.id);
+
+  //     if (isWinnerVisible) {
+  //       setTimeout(() => {
+  //         setWinner({ ...win.car, time: win.time });
+  //         setIsRacing(false);
+  //       }, (win.time / SPEED_FACTOR) * 1000 + 100);
+  //     } else {
+  //       setWinner({ ...win.car, time: win.time });
+  //       setIsRacing(false);
+  //     }
+  //   } catch (err) {
+  //     console.error("Race failed:", err);
+  //     setRaceError("⚠️ Unable to connect to the server. Please make sure the backend is running.");
+  //     setIsRacing(false);
+  //   }
+  // };
+
   const handleStartRace = async () => {
     setIsRacing(true);
     setWinner(null);
     setRaceError("");
 
     try {
-      const res = await fetch("/garage");
-      if (!res.ok) throw new Error("Failed to fetch all cars for the race");
-      const allCars: Car[] = await res.json();
-
+      const allCars = cars; 
       const results = await Promise.all(
         allCars.map((car) =>
           startEngine(car.id)
             .then(({ velocity, distance }) => {
               const time = distance / velocity;
-
-              if (cars.find((c) => c.id === car.id)) {
-                animateCar(car.id, time);
-              }
-
+              animateCar(car.id, time);
               return { car, time };
             })
             .catch(() => {
@@ -94,20 +162,15 @@ export default function GaragePage() {
         console.error("Could not save winner:", e);
       }
 
-      const isWinnerVisible = cars.some((c) => c.id === win.car.id);
-
-      if (isWinnerVisible) {
-        setTimeout(() => {
-          setWinner({ ...win.car, time: win.time });
-          setIsRacing(false);
-        }, (win.time / SPEED_FACTOR) * 1000 + 100);
-      } else {
+      setTimeout(() => {
         setWinner({ ...win.car, time: win.time });
         setIsRacing(false);
-      }
+      }, (win.time / SPEED_FACTOR) * 1000 + 100);
     } catch (err) {
       console.error("Race failed:", err);
-      setRaceError("⚠️ Unable to connect to the server. Please make sure the backend is running.");
+      setRaceError(
+        "⚠️ Unable to connect to the server. Please make sure the backend is running."
+      );
       setIsRacing(false);
     }
   };
