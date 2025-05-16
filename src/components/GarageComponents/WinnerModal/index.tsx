@@ -11,32 +11,21 @@ interface WinnerModalProps {
   onClose: () => void;
 }
 
-const overlayVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 0.9 },
-  exit:   { opacity: 0 },
-};
-
 const modalVariants = {
-  hidden:  { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, scale: 0.8 },
   visible: { opacity: 1, scale: 1 },
-  exit:    { opacity: 0, scale: 0.8 },
+  exit: { opacity: 0, scale: 0.8 },
 };
 
 const WinnerModal: FC<WinnerModalProps> = ({ isOpen, winner, onClose }) => (
   <AnimatePresence>
     {isOpen && winner && (
-      <motion.div
-        className="fixed inset-0 bg-black flex items-center justify-center z-50"
-        variants={overlayVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        transition={{ duration: 0.3 }}
+      <div
+        className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
         onClick={onClose}
       >
         <motion.div
-          className="relative bg-white  p-6 shadow-2xl text-center w-80"
+          className="relative bg-white p-6 shadow-2xl text-center w-80 rounded-xl"
           variants={modalVariants}
           initial="hidden"
           animate="visible"
@@ -50,11 +39,10 @@ const WinnerModal: FC<WinnerModalProps> = ({ isOpen, winner, onClose }) => (
           >
             <AiOutlineClose size={24} />
           </button>
-
           <GiTrophyCup className="text-6xl text-gold mx-auto mb-4" />
-
-          <h2 className="text-2xl font-bold mb-2 font-racing">We have a winner!</h2>
-
+          <h2 className="text-2xl font-bold mb-2 font-racing">
+            We have a winner!
+          </h2>
           <p className="mb-6 text-gray-700 font-bruno">
             {winner.name} crossed the finish in{" "}
             <strong>{(winner.time / SPEED_FACTOR).toFixed(2)}s</strong>.
@@ -67,7 +55,7 @@ const WinnerModal: FC<WinnerModalProps> = ({ isOpen, winner, onClose }) => (
             Close
           </button>
         </motion.div>
-      </motion.div>
+      </div>
     )}
   </AnimatePresence>
 );
