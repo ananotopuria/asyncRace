@@ -32,8 +32,17 @@ export default function GaragePage() {
   const [createError, setCreateError] = useState("");
   const [raceError, setRaceError] = useState("");
 
+  const PAGE_SIZE = 7;
+
   useEffect(() => {
-    dispatch(fetchCars({ page, limit: 7 }));
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    if (page > totalPages && totalPages > 0) {
+      dispatch(setPage(totalPages));
+    }
+  }, [page, totalCount, dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchCars({ page, limit: PAGE_SIZE }));
   }, [dispatch, page]);
 
   const handleGenerate = async () => {
@@ -46,7 +55,7 @@ export default function GaragePage() {
       }
     }
     dispatch(setPage(1));
-    dispatch(fetchCars({ page: 1, limit: 7 }));
+    dispatch(fetchCars({ page: 1, limit: PAGE_SIZE }));
   };
 
   const handleStartRace = async () => {
@@ -63,10 +72,7 @@ export default function GaragePage() {
             const time = distance / velocity;
             animateCar(car.id, time);
             return new Promise<{ car: Car; time: number }>((resolve) => {
-              setTimeout(
-                () => resolve({ car, time }),
-                (time / SPEED_FACTOR) * 1000
-              );
+              setTimeout(() => resolve({ car, time }), (time / SPEED_FACTOR) * 1000);
             });
           })
           .catch(() => {
@@ -106,9 +112,7 @@ export default function GaragePage() {
       });
     } catch (err) {
       console.error("Race failed:", err);
-      setRaceError(
-        "⚠️ Unable to connect to the server. Please make sure the backend is running."
-      );
+      setRaceError("⚠️ Unable to connect to the server. Please make sure the backend is running.");
       setIsRacing(false);
     }
   };
@@ -146,21 +150,9 @@ export default function GaragePage() {
           onResetRace={handleResetRace}
         />
 
-        {createError && (
-          <p className="text-red-500 text-center mt-2">{createError}</p>
-        )}
-
-        {fetchError && (
-          <p className="text-red-600 text-center mt-2 font-medium">
-            {fetchError}
-          </p>
-        )}
-
-        {raceError && (
-          <p className="text-red-600 text-center mt-2 font-medium">
-            {raceError}
-          </p>
-        )}
+        {createError && <p className="text-red-500 text-center mt-2">{createError}</p>}
+        {fetchError && <p className="text-red-600 text-center mt-2 font-medium">{fetchError}</p>}
+        {raceError && <p className="text-red-600 text-center mt-2 font-medium">{raceError}</p>}
 
         <CarForm />
 
@@ -181,7 +173,7 @@ export default function GaragePage() {
             <Pagination
               currentPage={page}
               totalItems={totalCount}
-              pageSize={7}
+              pageSize={PAGE_SIZE}
               onPageChange={(p) => dispatch(setPage(p))}
             />
           </div>
