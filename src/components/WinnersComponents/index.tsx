@@ -35,7 +35,8 @@ export default function WinnersPage() {
       <div className="bg-white shadow-lg overflow-hidden">
         {status === "loading" ? (
           <p className="p-4 text-center text-gray-600">Loading winners…</p>
-        ) : winners.length === 0 ? (
+        ) : winners.length === 0 ||
+          winners.filter((w) => w.name && w.wins > 0).length === 0 ? (
           <p className="p-6 text-center text-gray-500">No winners found yet.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -81,34 +82,36 @@ export default function WinnersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {winners.map((w: WinnerRecord, idx: number) => (
-                  <motion.tr
-                    key={w.id}
-                    className="hover:bg-gray-50"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: idx * 0.1 }}
-                  >
-                    <td className="px-4 py-2 text-sm text-gray-900">
-                      {(page - 1) * 10 + idx + 1}
-                    </td>
-                    <td className="px-4 py-2">
-                      <div
-                        className="w-6 h-6 rounded-full mx-auto"
-                        style={{ backgroundColor: w.color }}
-                      />
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-900">
-                      {w.name}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-900">
-                      {w.wins}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-900">
-                      {w.time.toFixed(2)}s
-                    </td>
-                  </motion.tr>
-                ))}
+                {winners
+                  .filter((w: WinnerRecord) => w.name && w.wins > 0)
+                  .map((w: WinnerRecord, idx: number) => (
+                    <motion.tr
+                      key={w.id}
+                      className="hover:bg-gray-50"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: idx * 0.1 }}
+                    >
+                      <td className="px-4 py-2 text-sm text-gray-900">
+                        {(page - 1) * 10 + idx + 1}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div
+                          className="w-6 h-6 rounded-full mx-auto"
+                          style={{ backgroundColor: w.color }}
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-900">
+                        {w.name}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-900">
+                        {w.wins}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-900">
+                        {w.time.toFixed(2)}s
+                      </td>
+                    </motion.tr>
+                  ))}
               </tbody>
             </table>
           </div>
